@@ -384,11 +384,18 @@
             ['W', 'X', 'C', 'V', 'B', 'N']
         ];
 
-        const keyboard_old = [
+        const keyboard_large = [
             ['A', 'Z', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
             ['Q', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M'],
-            ['W', 'X', 'C', 'V', 'B', 'N', '←']
+            ['W', 'X', 'C', 'V', 'B', 'N']
         ];
+
+        // Déterminer quel clavier utiliser selon la taille d'écran
+        function getKeyboard() {
+            return window.innerWidth <= 600 ? keyboard : keyboard_large;
+        }
+
+        let currentKeyboard = getKeyboard();
 
         function highlightButton(element) {
             if (lastActiveElement) {
@@ -473,23 +480,50 @@
             phrasesGrid.appendChild(button);
         });
 
-        // Initialiser le clavier
-        keyboard.forEach((row, index) => {
-            const rowDiv = document.getElementById(`row${index + 1}`);
-            row.forEach(key => {
-                const button = document.createElement('button');
-                button.className = key === '←' ? 'key special' : 'key';
-                button.textContent = key;
-                button.onclick = (e) => {
-                    if (key === '←') {
-                        deleteChar();
-                    } else {
-                        addToMessage(key);
-                    }
-                    highlightButton(e.target);
-                };
-                rowDiv.appendChild(button);
+        // Fonction pour initialiser/réinitialiser le clavier
+        function initializeKeyboard() {
+            currentKeyboard = getKeyboard();
+            
+            // Nettoyer les rangées existantes
+            for (let i = 1; i <= 5; i++) {
+                const rowDiv = document.getElementById(`row${i}`);
+                if (rowDiv) {
+                    rowDiv.innerHTML = '';
+                }
+            }
+            
+            // Créer les nouvelles touches
+            currentKeyboard.forEach((row, index) => {
+                const rowDiv = document.getElementById(`row${index + 1}`);
+                if (rowDiv) {
+                    row.forEach(key => {
+                        const button = document.createElement('button');
+                        button.className = key === '←' ? 'key special' : 'key';
+                        button.textContent = key;
+                        button.onclick = (e) => {
+                            if (key === '←') {
+                                deleteChar();
+                            } else {
+                                addToMessage(key);
+                            }
+                            highlightButton(e.target);
+                        };
+                        rowDiv.appendChild(button);
+                    });
+                }
             });
+        }
+
+        // Initialiser le clavier au chargement
+        initializeKeyboard();
+
+        // Réinitialiser le clavier lors du redimensionnement
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                initializeKeyboard();
+            }, 250);
         });
 
         // Mettre à jour les gestionnaires pour OUI/NON
